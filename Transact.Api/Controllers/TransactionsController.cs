@@ -41,7 +41,7 @@ public class TransactionsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("history/{accountNumber}")]
+    [HttpGet("{accountNumber}")]
     public async Task<IActionResult> GetTransactionHistory(string accountNumber)
     {
         var result = await _transactionService.GetTransactionHistoryAsync(accountNumber);

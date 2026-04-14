@@ -1,10 +1,10 @@
 namespace Transac.Domain.Interfaces;
 
-public interface IRepository<T> where T : class
+public interface IRepository<T, TKey> where T : class
 {
-    Task<T?> GetByIdAsync(Guid id);
+    Task<T?> GetByIdAsync(TKey id);
     Task<IEnumerable<T>> GetAllAsync();
-    Task<Guid> AddAsync(T entity);
+    Task<TKey> AddAsync(T entity);
     Task<bool> UpdateAsync(T entity);
-    Task<bool> DeleteAsync(Guid id);
+    Task<bool> DeleteAsync(TKey id);
 }

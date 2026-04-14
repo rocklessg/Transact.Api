@@ -44,24 +44,24 @@ public class TransactionRepository : ITransactionRepository
         return await _connection.QueryAsync<Transaction>(sql, new { AccountNumber = accountNumber }, _transaction);
     }
 
-    public async Task<int> GetTransactionCountForMonthAsync(Guid customerId, int month, int year)
+    public async Task<int> GetTransactionCountForMonthAsync(long customerId, int month, int year)
     {
         const string sql = @"
             SELECT COUNT(*)
             FROM Transactions t
-            INNER JOIN Accounts a ON t.SourceAccountId = a.Id
+            INNER JOIN AccountData a ON t.SourceAccountId = a.AccountId
             WHERE a.CustomerId = @CustomerId
               AND t.TransactionType = @TransactionType
               AND MONTH(t.TransactionDate) = @Month
               AND YEAR(t.TransactionDate) = @Year
               AND t.IsSuccessful = 1";
 
-        return await _connection.ExecuteScalarAsync<int>(sql, new 
-        { 
-            CustomerId = customerId, 
+        return await _connection.ExecuteScalarAsync<int>(sql, new
+        {
+            CustomerId = customerId,
             TransactionType = (int)TransactionType.Transfer,
-            Month = month, 
-            Year = year 
+            Month = month,
+            Year = year
         }, _transaction);
     }
 

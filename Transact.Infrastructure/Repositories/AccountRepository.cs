@@ -20,32 +20,32 @@ public class AccountRepository : IAccountRepository
         _transaction = transaction;
     }
 
-    public async Task<Account?> GetByIdAsync(Guid id)
+    public async Task<Account?> GetByIdAsync(int id)
     {
         const string sql = @"
-            SELECT Id, CustomerId, AccountNumber, Balance, DateCreated, DateModified, IsActive
-            FROM Accounts
-            WHERE Id = @Id";
+            SELECT AccountId, AccountNumber, CustomerId, AccountBalance, AccountOpenDate
+            FROM AccountData
+            WHERE AccountId = @AccountId";
 
-        return await _connection.QueryFirstOrDefaultAsync<Account>(sql, new { Id = id }, _transaction);
+        return await _connection.QueryFirstOrDefaultAsync<Account>(sql, new { AccountId = id }, _transaction);
     }
 
     public async Task<Account?> GetByAccountNumberAsync(string accountNumber)
     {
         const string sql = @"
-            SELECT Id, CustomerId, AccountNumber, Balance, DateCreated, DateModified, IsActive
-            FROM Accounts
-            WHERE AccountNumber = @AccountNumber AND IsActive = 1";
+            SELECT AccountId, AccountNumber, CustomerId, AccountBalance, AccountOpenDate
+            FROM AccountData
+            WHERE AccountNumber = @AccountNumber";
 
         return await _connection.QueryFirstOrDefaultAsync<Account>(sql, new { AccountNumber = accountNumber }, _transaction);
     }
 
-    public async Task<IEnumerable<Account>> GetByCustomerIdAsync(Guid customerId)
+    public async Task<IEnumerable<Account>> GetByCustomerIdAsync(long customerId)
     {
         const string sql = @"
-            SELECT Id, CustomerId, AccountNumber, Balance, DateCreated, DateModified, IsActive
-            FROM Accounts
-            WHERE CustomerId = @CustomerId AND IsActive = 1";
+            SELECT AccountId, AccountNumber, CustomerId, AccountBalance, AccountOpenDate
+            FROM AccountData
+            WHERE CustomerId = @CustomerId";
 
         return await _connection.QueryAsync<Account>(sql, new { CustomerId = customerId }, _transaction);
     }
@@ -53,43 +53,37 @@ public class AccountRepository : IAccountRepository
     public async Task<IEnumerable<Account>> GetAllAsync()
     {
         const string sql = @"
-            SELECT Id, CustomerId, AccountNumber, Balance, DateCreated, DateModified, IsActive
-            FROM Accounts
-            WHERE IsActive = 1";
+            SELECT AccountId, AccountNumber, CustomerId, AccountBalance, AccountOpenDate
+            FROM AccountData";
 
         return await _connection.QueryAsync<Account>(sql, transaction: _transaction);
     }
 
-    public async Task<Guid> AddAsync(Account entity)
+    public async Task<int> AddAsync(Account entity)
     {
         const string sql = @"
-            INSERT INTO Accounts (Id, CustomerId, AccountNumber, Balance, DateCreated, IsActive)
-            VALUES (@Id, @CustomerId, @AccountNumber, @Balance, @DateCreated, @IsActive)";
-
-        entity.Id = Guid.NewGuid();
-        entity.DateCreated = DateTime.UtcNow;
+            INSERT INTO AccountData (AccountId, AccountNumber, CustomerId, AccountBalance, AccountOpenDate)
+            VALUES (@AccountId, @AccountNumber, @CustomerId, @AccountBalance, @AccountOpenDate)";
 
         await _connection.ExecuteAsync(sql, entity, _transaction);
-        return entity.Id;
+        return entity.AccountId;
     }
 
     public async Task<bool> UpdateAsync(Account entity)
     {
         const string sql = @"
-            UPDATE Accounts
-            SET CustomerId = @CustomerId, AccountNumber = @AccountNumber, Balance = @Balance,
-                DateModified = @DateModified, IsActive = @IsActive
-            WHERE Id = @Id";
+            UPDATE AccountData
+            SET AccountBalance = @AccountBalance
+            WHERE AccountId = @AccountId";
 
-        entity.DateModified = DateTime.UtcNow;
         var affected = await _connection.ExecuteAsync(sql, entity, _transaction);
         return affected > 0;
     }
 
-    public async Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        const string sql = "UPDATE Accounts SET IsActive = 0, DateModified = @DateModified WHERE Id = @Id";
-        var affected = await _connection.ExecuteAsync(sql, new { Id = id, DateModified = DateTime.UtcNow }, _transaction);
+        const string sql = "DELETE FROM AccountData WHERE AccountId = @AccountId";
+        var affected = await _connection.ExecuteAsync(sql, new { AccountId = id }, _transaction);
         return affected > 0;
     }
 }

@@ -24,7 +24,7 @@ public class LoyaltyService : ILoyaltyService
         }
 
         int basePoints = CalculateBasePoints(customer.CustomerType, transaction.Amount);
-        
+
         if (basePoints == 0)
         {
             return (0, null);
@@ -32,7 +32,7 @@ public class LoyaltyService : ILoyaltyService
 
         int finalPoints = await ApplyTenureBonusAsync(customer, basePoints);
 
-        await SaveLoyaltyPointsAsync(customer.Id, transaction.Id, finalPoints);
+        await SaveLoyaltyPointsAsync(customer.CustomerId, transaction.Id, finalPoints);
 
         var reward = await ProcessRewardsAsync(customer, transaction);
 
@@ -43,9 +43,9 @@ public class LoyaltyService : ILoyaltyService
     {
         return customerType switch
         {
-            CustomerType.Business when amount > LoyaltyConstants.BusinessMinTransactionAmount 
+            CustomerType.Business when amount > LoyaltyConstants.BusinessMinTransactionAmount
                 => LoyaltyConstants.BusinessPointsPerTransaction,
-            CustomerType.Retail when amount > LoyaltyConstants.RetailMinTransactionAmount 
+            CustomerType.Retail when amount > LoyaltyConstants.RetailMinTransactionAmount
                 => LoyaltyConstants.RetailPointsPerTransaction,
             _ => 0
         };
@@ -54,7 +54,7 @@ public class LoyaltyService : ILoyaltyService
     private async Task<int> ApplyTenureBonusAsync(Customer customer, int basePoints)
     {
         int tenureYears = customer.GetTenureInYears();
-        
+
         if (tenureYears <= LoyaltyConstants.TenureYearsForDoublePoints)
         {
             return basePoints;
@@ -64,7 +64,7 @@ public class LoyaltyService : ILoyaltyService
         int currentYear = DateTime.UtcNow.Year;
 
         int pointTransactionCount = await _unitOfWork.LoyaltyPoints
-            .GetPointTransactionCountForMonthAsync(customer.Id, currentMonth, currentYear);
+            .GetPointTransactionCountForMonthAsync(customer.CustomerId, currentMonth, currentYear);
 
         if (pointTransactionCount < LoyaltyConstants.MaxDoublePointsTransactionsPerMonth)
         {
@@ -74,7 +74,7 @@ public class LoyaltyService : ILoyaltyService
         return basePoints;
     }
 
-    private async Task SaveLoyaltyPointsAsync(Guid customerId, Guid transactionId, int points)
+    private async Task SaveLoyaltyPointsAsync(long customerId, Guid transactionId, int points)
     {
         var loyaltyPoint = new LoyaltyPoint
         {
@@ -106,7 +106,7 @@ public class LoyaltyService : ILoyaltyService
     private async Task<RewardInfo?> ProcessBusinessRewardAsync(Customer customer, Transaction transaction, int month, int year)
     {
         bool alreadyReceivedCashback = await _unitOfWork.Rewards
-            .HasReceivedRewardForMonthAsync(customer.Id, RewardType.Cashback, month, year);
+            .HasReceivedRewardForMonthAsync(customer.CustomerId, RewardType.Cashback, month, year);
 
         if (alreadyReceivedCashback)
         {
@@ -114,14 +114,14 @@ public class LoyaltyService : ILoyaltyService
         }
 
         int totalPoints = await _unitOfWork.LoyaltyPoints
-            .GetTotalPointsForMonthAsync(customer.Id, month, year);
+            .GetTotalPointsForMonthAsync(customer.CustomerId, month, year);
 
         if (totalPoints >= LoyaltyConstants.BusinessPointsThresholdForCashback)
         {
             var reward = new Reward
             {
                 Id = Guid.NewGuid(),
-                CustomerId = customer.Id,
+                CustomerId = customer.CustomerId,
                 TransactionId = transaction.Id,
                 RewardType = RewardType.Cashback,
                 Amount = LoyaltyConstants.BusinessCashbackAmount,
@@ -146,8 +146,8 @@ public class LoyaltyService : ILoyaltyService
 
     private async Task<RewardInfo?> ProcessRetailRewardAsync(Customer customer, Transaction transaction, int month, int year)
     {
-        var pendingReward = await _unitOfWork.Rewards.GetPendingFreeAirtimeRewardAsync(customer.Id);
-        
+        var pendingReward = await _unitOfWork.Rewards.GetPendingFreeAirtimeRewardAsync(customer.CustomerId);
+
         if (pendingReward != null)
         {
             pendingReward.TransactionId = transaction.Id;
@@ -163,22 +163,22 @@ public class LoyaltyService : ILoyaltyService
         }
 
         bool alreadyQualified = await _unitOfWork.Rewards
-            .HasReceivedRewardForMonthAsync(customer.Id, RewardType.FreeAirtime, month, year);
+            .HasReceivedRewardForMonthAsync(customer.CustomerId, RewardType.FreeAirtime, month, year);
 
         if (alreadyQualified)
         {
             return null;
         }
 
-        int transactionCount = await _unitOfWork.Transactions
-            .GetTransactionCountForMonthAsync(customer.Id, month, year);
+        int qualifyingTransferCount = await _unitOfWork.LoyaltyPoints
+            .GetPointTransactionCountForMonthAsync(customer.CustomerId, month, year);
 
-        if (transactionCount >= LoyaltyConstants.RetailTransactionsForFreeAirtime)
+        if (qualifyingTransferCount >= LoyaltyConstants.RetailTransactionsForFreeAirtime)
         {
             var reward = new Reward
             {
                 Id = Guid.NewGuid(),
-                CustomerId = customer.Id,
+                CustomerId = customer.CustomerId,
                 TransactionId = null,
                 RewardType = RewardType.FreeAirtime,
                 Amount = LoyaltyConstants.RetailFreeAirtimeAmount,

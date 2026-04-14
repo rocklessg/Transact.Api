@@ -5,7 +5,7 @@ namespace Transac.Domain.Entities;
 public class Reward
 {
     public Guid Id { get; set; }
-    public Guid CustomerId { get; set; }
+    public long CustomerId { get; set; }
     public Guid? TransactionId { get; set; }
     public RewardType RewardType { get; set; }
     public decimal Amount { get; set; }

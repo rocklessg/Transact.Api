@@ -5,8 +5,8 @@ namespace Transac.Domain.Entities;
 public class Transaction
 {
     public Guid Id { get; set; }
-    public Guid SourceAccountId { get; set; }
-    public Guid? DestinationAccountId { get; set; }
+    public int SourceAccountId { get; set; }
+    public int? DestinationAccountId { get; set; }
     public string SourceAccountNumber { get; set; } = string.Empty;
     public string? DestinationAccountNumber { get; set; }
     public decimal Amount { get; set; }

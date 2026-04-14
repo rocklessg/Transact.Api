@@ -2,11 +2,9 @@
 
 public class Account
 {
-    public Guid Id { get; set; }
-    public Guid CustomerId { get; set; }
+    public int AccountId { get; set; }
     public string AccountNumber { get; set; } = string.Empty;
-    public decimal Balance { get; set; }
-    public DateTime DateCreated { get; set; }
-    public DateTime? DateModified { get; set; }
-    public bool IsActive { get; set; }
+    public long CustomerId { get; set; }
+    public decimal AccountBalance { get; set; }
+    public DateTime AccountOpenDate { get; set; }
 }

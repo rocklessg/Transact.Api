@@ -31,35 +31,35 @@ public class RewardRepository : IRewardRepository
         return await _connection.QueryFirstOrDefaultAsync<Reward>(sql, new { Id = id }, _transaction);
     }
 
-    public async Task<bool> HasReceivedRewardForMonthAsync(Guid customerId, RewardType rewardType, int month, int year)
+    public async Task<bool> HasReceivedRewardForMonthAsync(long customerId, RewardType rewardType, int month, int year)
     {
         const string sql = @"
             SELECT COUNT(1)
             FROM Rewards
             WHERE CustomerId = @CustomerId AND RewardType = @RewardType AND Month = @Month AND Year = @Year";
 
-        var count = await _connection.ExecuteScalarAsync<int>(sql, new 
-        { 
-            CustomerId = customerId, 
-            RewardType = (int)rewardType, 
-            Month = month, 
-            Year = year 
+        var count = await _connection.ExecuteScalarAsync<int>(sql, new
+        {
+            CustomerId = customerId,
+            RewardType = (int)rewardType,
+            Month = month,
+            Year = year
         }, _transaction);
 
         return count > 0;
     }
 
-    public async Task<Reward?> GetPendingFreeAirtimeRewardAsync(Guid customerId)
+    public async Task<Reward?> GetPendingFreeAirtimeRewardAsync(long customerId)
     {
         const string sql = @"
             SELECT Id, CustomerId, TransactionId, RewardType, Amount, AwardedDate, Month, Year, IsProcessed
             FROM Rewards
             WHERE CustomerId = @CustomerId AND RewardType = @RewardType AND IsProcessed = 0";
 
-        return await _connection.QueryFirstOrDefaultAsync<Reward>(sql, new 
-        { 
-            CustomerId = customerId, 
-            RewardType = (int)RewardType.FreeAirtime 
+        return await _connection.QueryFirstOrDefaultAsync<Reward>(sql, new
+        {
+            CustomerId = customerId,
+            RewardType = (int)RewardType.FreeAirtime
         }, _transaction);
     }
 

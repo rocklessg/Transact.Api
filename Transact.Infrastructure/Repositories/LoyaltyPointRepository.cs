@@ -30,7 +30,7 @@ public class LoyaltyPointRepository : ILoyaltyPointRepository
         return await _connection.QueryFirstOrDefaultAsync<LoyaltyPoint>(sql, new { Id = id }, _transaction);
     }
 
-    public async Task<int> GetTotalPointsForMonthAsync(Guid customerId, int month, int year)
+    public async Task<int> GetTotalPointsForMonthAsync(long customerId, int month, int year)
     {
         const string sql = @"
             SELECT ISNULL(SUM(Points), 0)
@@ -40,7 +40,7 @@ public class LoyaltyPointRepository : ILoyaltyPointRepository
         return await _connection.ExecuteScalarAsync<int>(sql, new { CustomerId = customerId, Month = month, Year = year }, _transaction);
     }
 
-    public async Task<int> GetPointTransactionCountForMonthAsync(Guid customerId, int month, int year)
+    public async Task<int> GetPointTransactionCountForMonthAsync(long customerId, int month, int year)
     {
         const string sql = @"
             SELECT COUNT(*)

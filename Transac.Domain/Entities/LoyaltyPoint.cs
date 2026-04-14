@@ -3,7 +3,7 @@ namespace Transac.Domain.Entities;
 public class LoyaltyPoint
 {
     public Guid Id { get; set; }
-    public Guid CustomerId { get; set; }
+    public long CustomerId { get; set; }
     public Guid TransactionId { get; set; }
     public int Points { get; set; }
     public DateTime EarnedDate { get; set; }

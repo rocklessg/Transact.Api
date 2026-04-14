@@ -20,22 +20,22 @@ public class CustomerRepository : ICustomerRepository
         _transaction = transaction;
     }
 
-    public async Task<Customer?> GetByIdAsync(Guid id)
+    public async Task<Customer?> GetByIdAsync(long id)
     {
         const string sql = @"
-            SELECT Id, FirstName, LastName, Email, PhoneNumber, CustomerType, DateCreated, DateModified, IsActive
-            FROM Customers
-            WHERE Id = @Id";
+            SELECT CustomerId, CustomerName, CustomerType, DateCreated
+            FROM CustomerData
+            WHERE CustomerId = @CustomerId";
 
-        return await _connection.QueryFirstOrDefaultAsync<Customer>(sql, new { Id = id }, _transaction);
+        return await _connection.QueryFirstOrDefaultAsync<Customer>(sql, new { CustomerId = id }, _transaction);
     }
 
     public async Task<Customer?> GetByAccountNumberAsync(string accountNumber)
     {
         const string sql = @"
-            SELECT c.Id, c.FirstName, c.LastName, c.Email, c.PhoneNumber, c.CustomerType, c.DateCreated, c.DateModified, c.IsActive
-            FROM Customers c
-            INNER JOIN Accounts a ON c.Id = a.CustomerId
+            SELECT c.CustomerId, c.CustomerName, c.CustomerType, c.DateCreated
+            FROM CustomerData c
+            INNER JOIN AccountData a ON c.CustomerId = a.CustomerId
             WHERE a.AccountNumber = @AccountNumber";
 
         return await _connection.QueryFirstOrDefaultAsync<Customer>(sql, new { AccountNumber = accountNumber }, _transaction);
@@ -44,43 +44,37 @@ public class CustomerRepository : ICustomerRepository
     public async Task<IEnumerable<Customer>> GetAllAsync()
     {
         const string sql = @"
-            SELECT Id, FirstName, LastName, Email, PhoneNumber, CustomerType, DateCreated, DateModified, IsActive
-            FROM Customers
-            WHERE IsActive = 1";
+            SELECT CustomerId, CustomerName, CustomerType, DateCreated
+            FROM CustomerData";
 
         return await _connection.QueryAsync<Customer>(sql, transaction: _transaction);
     }
 
-    public async Task<Guid> AddAsync(Customer entity)
+    public async Task<long> AddAsync(Customer entity)
     {
         const string sql = @"
-            INSERT INTO Customers (Id, FirstName, LastName, Email, PhoneNumber, CustomerType, DateCreated, IsActive)
-            VALUES (@Id, @FirstName, @LastName, @Email, @PhoneNumber, @CustomerType, @DateCreated, @IsActive)";
+            INSERT INTO CustomerData (CustomerId, CustomerName, CustomerType, DateCreated)
+            VALUES (@CustomerId, @CustomerName, @CustomerType, @DateCreated)";
 
-        entity.Id = Guid.NewGuid();
-        entity.DateCreated = DateTime.UtcNow;
-        
         await _connection.ExecuteAsync(sql, entity, _transaction);
-        return entity.Id;
+        return entity.CustomerId;
     }
 
     public async Task<bool> UpdateAsync(Customer entity)
     {
         const string sql = @"
-            UPDATE Customers
-            SET FirstName = @FirstName, LastName = @LastName, Email = @Email, PhoneNumber = @PhoneNumber,
-                CustomerType = @CustomerType, DateModified = @DateModified, IsActive = @IsActive
-            WHERE Id = @Id";
+            UPDATE CustomerData
+            SET CustomerName = @CustomerName, CustomerType = @CustomerType
+            WHERE CustomerId = @CustomerId";
 
-        entity.DateModified = DateTime.UtcNow;
         var affected = await _connection.ExecuteAsync(sql, entity, _transaction);
         return affected > 0;
     }
 
-    public async Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(long id)
     {
-        const string sql = "UPDATE Customers SET IsActive = 0, DateModified = @DateModified WHERE Id = @Id";
-        var affected = await _connection.ExecuteAsync(sql, new { Id = id, DateModified = DateTime.UtcNow }, _transaction);
+        const string sql = "DELETE FROM CustomerData WHERE CustomerId = @CustomerId";
+        var affected = await _connection.ExecuteAsync(sql, new { CustomerId = id }, _transaction);
         return affected > 0;
     }
 }

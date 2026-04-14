@@ -2,8 +2,8 @@ using Transac.Domain.Entities;
 
 namespace Transac.Domain.Interfaces;
 
-public interface IAccountRepository : IRepository<Account>
+public interface IAccountRepository : IRepository<Account, int>
 {
     Task<Account?> GetByAccountNumberAsync(string accountNumber);
-    Task<IEnumerable<Account>> GetByCustomerIdAsync(Guid customerId);
+    Task<IEnumerable<Account>> GetByCustomerIdAsync(long customerId);
 }

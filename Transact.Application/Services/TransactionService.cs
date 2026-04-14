@@ -47,7 +47,7 @@ public class TransactionService : ITransactionService
             return ApiResponse<TransferResponse>.FailureResponse("Destination account not found");
         }
 
-        if (sourceAccount.Balance < request.Amount)
+        if (sourceAccount.AccountBalance < request.Amount)
         {
             return ApiResponse<TransferResponse>.FailureResponse("Insufficient balance");
         }
@@ -65,8 +65,8 @@ public class TransactionService : ITransactionService
             var transaction = new Transaction
             {
                 Id = Guid.NewGuid(),
-                SourceAccountId = sourceAccount.Id,
-                DestinationAccountId = destinationAccount.Id,
+                SourceAccountId = sourceAccount.AccountId,
+                DestinationAccountId = destinationAccount.AccountId,
                 SourceAccountNumber = sourceAccount.AccountNumber,
                 DestinationAccountNumber = destinationAccount.AccountNumber,
                 Amount = request.Amount,
@@ -117,7 +117,7 @@ public class TransactionService : ITransactionService
             return ApiResponse<AirtimeResponse>.FailureResponse("Source account not found");
         }
 
-        if (sourceAccount.Balance < request.Amount)
+        if (sourceAccount.AccountBalance < request.Amount)
         {
             return ApiResponse<AirtimeResponse>.FailureResponse("Insufficient balance");
         }
@@ -129,7 +129,7 @@ public class TransactionService : ITransactionService
             var transaction = new Transaction
             {
                 Id = Guid.NewGuid(),
-                SourceAccountId = sourceAccount.Id,
+                SourceAccountId = sourceAccount.AccountId,
                 SourceAccountNumber = sourceAccount.AccountNumber,
                 Amount = request.Amount,
                 TransactionType = TransactionType.Airtime,
