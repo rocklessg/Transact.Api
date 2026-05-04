@@ -8,7 +8,7 @@ namespace Transact.Api.Controllers;
 [Route("api/[controller]")]
 public class TransactionsController : ControllerBase
 {
-    private readonly ITransactionService _transactionService;
+    private readonly ITransactionService _transactionService ;
 
     public TransactionsController(ITransactionService transactionService)
     {
